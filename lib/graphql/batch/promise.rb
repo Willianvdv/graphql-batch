@@ -5,7 +5,7 @@ module GraphQL::Batch
     end
 
     def defer
-      Executor.current.defer { yield }
+      Executor.current.defer { super }
     end
   end
 end
