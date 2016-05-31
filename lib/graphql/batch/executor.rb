@@ -7,10 +7,11 @@ module GraphQL::Batch
       Thread.current[THREAD_KEY] ||= new
     end
 
-    attr_reader :loaders
+    attr_reader :loaders, :loading
 
     def initialize
       @loaders = {}
+      @loading = false
     end
 
     def shift
@@ -18,7 +19,7 @@ module GraphQL::Batch
     end
 
     def tick
-      shift.resolve
+      with_loading(true) { shift.resolve }
     end
 
     def wait(promise)
@@ -34,6 +35,22 @@ module GraphQL::Batch
 
     def clear
       loaders.clear
+    end
+
+    def defer
+      with_loading(false) { yield }
+    end
+
+    private
+
+    def with_loading(loading)
+      was_loading = @loading
+      begin
+        @loading = loading
+        yield
+      ensure
+        @loading = was_loading
+      end
     end
   end
 end
